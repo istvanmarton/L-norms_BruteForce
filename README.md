@@ -69,7 +69,7 @@ or
 
 The argument 'number_of_processes' specifies the number of processes. For the rest of the arguments, please refer to the CUDA version.
 
-##Options for tuning in 'functions.h'
+## Options for tuning in 'functions.h'
 
 &nbsp;
  + The variable 'length' defines the maximal number of columns allowed for the matrix for d > 1. For d = 1, it limits the greater of the number of rows and columns.
