@@ -114,7 +114,7 @@ The program also writes the optimal strategy, defining the L norm of a given ord
 
 ## Testing the code for performance
 
-In this section, we describe how to run calculations to figure out the optimal grid and block sizes for the CUDA code. These auxiliary codes are written in bash, Octave, and gnuplot.
+In this section, we describe how to run calculations to figure out the optimal grid and block sizes for the CUDA code. These auxiliary codes are written in Bash, Octave, and Gnuplot.
 
 ### gen_mtx.m
 
