@@ -70,24 +70,24 @@ The argument 'number_of_processes' specifies the number of processes. For the re
 *Options for tuning in 'functions.h'*
 
 &nbsp;
-	+ The variable 'length' defines the maximal number of columns allowed for the matrix for d > 1. For d = 1, it limits the greater of the number of rows and columns.
-	+ The maximal order of the L norm, i.e., d, that the code can calculate is defined in the variable 'RANK_OF_NORM'.
+ + The variable 'length' defines the maximal number of columns allowed for the matrix for d > 1. For d = 1, it limits the greater of the number of rows and columns.
+ + The maximal order of the L norm, i.e., d, that the code can calculate is defined in the variable 'RANK_OF_NORM'.
 
 Please note: If the product of the variables 'length' and 'RANK_OF_NORM' is too large for a given GPU, the CUDA version may fail silently and return a zero L norm value. For instance, when NVIDIA RTX 6000 Ada was used along with 'length = 4096' and 'RANK_OF_NORM = 20', and the matrix entries were represented as int, the code returned with zero for the $L_4$ norm of the matrix, and the CUDA kernel was not even invoked.
 
 The code is prepared for representing the matrix entries as an arbitrarily chosen integer type. The default is 'int'. Suppose one intends to use 'long long int'. In this case, the following modifications are needed in 'functions.h':
-	+ line 11: 'typedef int int_type;' -> 'typedef long long int int_type;'
-	+ line 59 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
-	+ line 412 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
+ + line 11: 'typedef int int_type;' -> 'typedef long long int int_type;'
+ + line 59 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
+ + line 412 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
 
 The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the the resulting number can be represented with a long long int.
 
 **Input**
 
 In the file containing the matrix:
-	+ The separator between entries of the same row can be any character apart from a numeral or any of the following characters: 'e', 'E', '.', '+', '-'.
-	+ Consecutive rows must be placed in new lines.
-	+ The entries of the matrix must be integers.
+ + The separator between entries of the same row can be any character apart from a numeral or any of the following characters: 'e', 'E', '.', '+', '-'.
+ + Consecutive rows must be placed in new lines.
+ + The entries of the matrix must be integers.
 
 **Output**
 
@@ -96,15 +96,15 @@ Output is shared between the standard output stream (where the actual L norm val
 *Standard output*
 
 The program prints here
-	+ the number of rows and columns of the input matrix as 'rows: r, cols: c', where r and c stand for the number of rows and the number of columns of the input matrix, respectively,
-	+ the number of blocks and the number of threads for the CUDA version, the number of threads for the OpenMP version, and number of processes for the MPI version,
-	+ the maximal length of the strategy vector the computer can deal with, and
-	+ the value of the L norm.
+ + the number of rows and columns of the input matrix as 'rows: r, cols: c', where r and c stand for the number of rows and the number of columns of the input matrix, respectively,
+ + the number of blocks and the number of threads for the CUDA version, the number of threads for the OpenMP version, and number of processes for the MPI version,
+ + the maximal length of the strategy vector the computer can deal with, and
+ + the value of the L norm.
 
 Furthermore, in case the program was allowed to preprocess the matrix, the program writes out the performed reduction steps. For instance:
-	+ 'row 0 entries are zeros.' means the entries of the zeroth row of the matrix are zeros, and that row was deleted.
-	+ 'col 3 was subtracted from 1' means column 3 was subtracted from column 1, and column 3 was deleted.
-	+ 'row 5 was added to 1.' means row 5 was added to row 1, and row 5 was deleted.
+ + 'row 0 entries are zeros.' means the entries of the zeroth row of the matrix are zeros, and that row was deleted.
+ + 'col 3 was subtracted from 1' means column 3 was subtracted from column 1, and column 3 was deleted.
+ + 'row 5 was added to 1.' means row 5 was added to row 1, and row 5 was deleted.
 
 *Output file*
 
@@ -131,21 +131,21 @@ The script generates two kinds of output files. The names of the files indicate 
 *calc_Statistics.m*
 	
 The Octave script 'calc_Statistics.m' can postprocess the 'proc_thread_...' files to generate the statistics of the execution times. The following variables must be defined in this script:
-	1. 'subdir' should be defined as empty if the Octave script can be found in the same directory as the 'proc_thread_...' files. In case the Octave script is in one directory and the 'proc_thread_...' files can be found in a subfolder of that directory, 'subdir' should be the name of this subfolder.
-	2. 'order' refers to the order of the L norm for which the calculations were performed.
-	3. 'threads' must be the same as in the shell script 'time_order_1.sh'.
-	4. Similarly for 'blocks'.
+ 1. 'subdir' should be defined as empty if the Octave script can be found in the same directory as the 'proc_thread_...' files. In case the Octave script is in one directory and the 'proc_thread_...' files can be found in a subfolder of that directory, 'subdir' should be the name of this subfolder.
+ 2. 'order' refers to the order of the L norm for which the calculations were performed.
+ 3. 'threads' must be the same as in the shell script 'time_order_1.sh'.
+ 4. Similarly for 'blocks'.
 
 The script writes output to a file named like 'grid_8192_order_1.txt', where 8192 stands for the total number of threads and 1 for the order of the L norm. The output files have 8 columns. The columns stand for
-	1. the grid size (number of blocks),
-	2. the block size (number of threads in one block),
+ 1. the grid size (number of blocks),
+ 2. the block size (number of threads in one block),
 and
-	3. the average,
-	4. the minimum,
-	5. the first quartile,
-	6. the median,
-	7. the third quartile,
-	8. and the maximum
+ 3. the average,
+ 4. the minimum,
+ 5. the first quartile,
+ 6. the median,
+ 7. the third quartile,
+ 8. and the maximum
 of the runtimes corresponding to the given grid and block size.
 
 *runTime.gnu*
