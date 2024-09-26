@@ -84,18 +84,18 @@ The code is prepared for representing the matrix entries as an arbitrarily chose
 
 The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the the resulting number can be represented with a long long int.
 
-**Input**
+## Input
 
 In the file containing the matrix:
  + The separator between entries of the same row can be any character apart from a numeral or any of the following characters: 'e', 'E', '.', '+', '-'.
  + Consecutive rows must be placed in new lines.
  + The entries of the matrix must be integers.
 
-**Output**
+## Output
 
 Output is shared between the standard output stream (where the actual L norm value is printed among other pieces of information) and a file dedicated to the optimal strategy vector.
 
-*Standard output*
+### Standard output
 
 The program prints here
  + the number of rows and columns of the input matrix as 'rows: r, cols: c', where r and c stand for the number of rows and the number of columns of the input matrix, respectively,
@@ -108,7 +108,7 @@ Furthermore, in case the program was allowed to preprocess the matrix, the progr
  + 'col 3 was subtracted from 1' means column 3 was subtracted from column 1, and column 3 was deleted.
  + 'row 5 was added to 1.' means row 5 was added to row 1, and row 5 was deleted.
 
-*Output file*
+### Output file
 
 The program also writes the optimal strategy, defining the L norm of a given order, into a file. The filename has the following format: strategy_Ld.txt, where 'd' means the order of the L norm. For example, the file 'strategy_L2.txt' contains the optimal strategy vector associated with the L_2 norm of the matrix. These files consist of entries ±1 if d = 1. If d ≥ 2, the entries of the strategy vectors in the files are from {0,1,...,d-1}.
 
