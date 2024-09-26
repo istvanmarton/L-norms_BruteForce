@@ -1,12 +1,14 @@
+#Brute force calculation of the L norms of a matrix
+
 This repository accompanies the article "Classical bounds on correlation-type Bell expressions and linear prepare-and-measure witnesses: efficient computation in parallel environments such as graphics processing units" by I. Márton, E. Bene, G. Drótos. In this article, we present the calculation of the $L_d$ norms, for any d, of an n×m matrix having real entries. The $L_1$ norm is the local bound of the bipartite correlation-type Bell expression represented by the given matrix. The $L_d$ norm for d ≥ 2 is the classical d-dimensional bound of the linear prepare-and-measure witness represented by the given matrix, i.e., the bound of the given witness associated with the communication of d-level classical messages in the prepare-and-measure scenario.
 
 A C implementation utilizing CUDA, OpenMP, and MPI has been made accessible in this repository under the source files L_CUDA.cu, L_OpenMP.c, and L_MPI.c, respectively; for the input, the matrix entries need to be converted to integers by an appropriate rescaling of the matrix (as the $L_d$ norms scale linearly with a multiplicative factor).
 
-**Compilation and execution**
+##Compilation and execution
 
 The "functions.h" file is needed to compile any of the above codes successfully.
 
-*CUDA*
+###CUDA
 
 To compile and run the CUDA code, one needs access to a CUDA compatible GPU and to install the CUDA compiler and a GPU driver. The CUDA code can be compiled with the following command:
 
@@ -39,7 +41,7 @@ invokes the GPU with 512 blocks and 32 threads in one block. The name of the fil
 
 the program will preprocess the matrix for both rows or columns to reduce the matrix.
 
-*OpenMP*
+###OpenMP
 
 The OpenMP code can be compiled, e.g., with the following command:
 
@@ -51,7 +53,7 @@ Please note that we have tested GCC only. For GCC, the default is no optimizatio
 
 The argument 'number_of_threads' specifies the number of threads. For the rest of the arguments, please refer to the CUDA version.
 
-*MPI*
+###MPI
 
 In order to compile and execute the MPI version, an MPI library should be installed. This code was tested with Open MPI. The MPI version can be compiled, e.g., with the following command:
 
@@ -67,7 +69,7 @@ or
 
 The argument 'number_of_processes' specifies the number of processes. For the rest of the arguments, please refer to the CUDA version.
 
-*Options for tuning in 'functions.h'*
+##Options for tuning in 'functions.h'
 
 &nbsp;
  + The variable 'length' defines the maximal number of columns allowed for the matrix for d > 1. For d = 1, it limits the greater of the number of rows and columns.
@@ -110,7 +112,7 @@ Furthermore, in case the program was allowed to preprocess the matrix, the progr
 
 The program also writes the optimal strategy, defining the L norm of a given order, into a file. The filename has the following format: strategy_Ld.txt, where 'd' means the order of the L norm. For example, the file 'strategy_L2.txt' contains the optimal strategy vector associated with the L_2 norm of the matrix. These files consist of entries ±1 if d = 1. If d ≥ 2, the entries of the strategy vectors in the files are from {0,1,...,d-1}.
 
-**Testing the code for performance**
+##Testing the code for performance
 
 In this section, we describe how to run calculations to figure out the optimal grid and block sizes for the CUDA code. These auxiliary codes are written in bash, Octave, and gnuplot.
 
