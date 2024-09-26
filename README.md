@@ -17,15 +17,15 @@ Then the program can be invoked as
 	./L_CUDA number_of_blocks number_of_threads_per_block filename_of_matrix d opt_flag_for_preproc
 
 where
-	+ 'number_of_blocks' is the number of blocks (grid size) the GPU is allowed to utilize,
-	+ 'number_of_threads_per_block' is the number of threads in one block (the block size),
-	+ 'filename_of_matrix' is the name of the file containing the input matrix,
-	+ 'd' is a positive integer indicating the order of the L norm one intends to calculate.
+ + 'number_of_blocks' is the number of blocks (grid size) the GPU is allowed to utilize,
+ + 'number_of_threads_per_block' is the number of threads in one block (the block size),
+ + 'filename_of_matrix' is the name of the file containing the input matrix,
+ + 'd' is a positive integer indicating the order of the L norm one intends to calculate.
 
 Furthermore, 'opt_flag_for_preproc' stands for an optional character that controls preprocessing of the matrix before the actual computation; please refer to the article for a discussion. When the value of this variable is not specified, the code does not perform any preprocessing. If the value is
-	+ 'y' or 'Y', the code will search for rows and columns that can be united or have only zero entries,
-	+ 'c' or 'C', it will search for columns that can be united and rows and columns with only zero entries,
-	+ 'r' or 'R' it will search for rows that can be united and rows and columns with only zero entries.
+ + 'y' or 'Y', the code will search for rows and columns that can be united or have only zero entries,
+ + 'c' or 'C', it will search for columns that can be united and rows and columns with only zero entries,
+ + 'r' or 'R' it will search for rows that can be united and rows and columns with only zero entries.
 
 If the value of the optional character is different from the previously listed ones, it is equivalent to not specifying any character.
 
