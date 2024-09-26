@@ -1,14 +1,14 @@
-#Brute force calculation of the L norms of a matrix
+# Brute force calculation of the L norms of a matrix
 
 This repository accompanies the article "Classical bounds on correlation-type Bell expressions and linear prepare-and-measure witnesses: efficient computation in parallel environments such as graphics processing units" by I. Márton, E. Bene, G. Drótos. In this article, we present the calculation of the $L_d$ norms, for any d, of an n×m matrix having real entries. The $L_1$ norm is the local bound of the bipartite correlation-type Bell expression represented by the given matrix. The $L_d$ norm for d ≥ 2 is the classical d-dimensional bound of the linear prepare-and-measure witness represented by the given matrix, i.e., the bound of the given witness associated with the communication of d-level classical messages in the prepare-and-measure scenario.
 
 A C implementation utilizing CUDA, OpenMP, and MPI has been made accessible in this repository under the source files L_CUDA.cu, L_OpenMP.c, and L_MPI.c, respectively; for the input, the matrix entries need to be converted to integers by an appropriate rescaling of the matrix (as the $L_d$ norms scale linearly with a multiplicative factor).
 
-##Compilation and execution
+## Compilation and execution
 
 The "functions.h" file is needed to compile any of the above codes successfully.
 
-###CUDA
+### CUDA
 
 To compile and run the CUDA code, one needs access to a CUDA compatible GPU and to install the CUDA compiler and a GPU driver. The CUDA code can be compiled with the following command:
 
@@ -41,7 +41,7 @@ invokes the GPU with 512 blocks and 32 threads in one block. The name of the fil
 
 the program will preprocess the matrix for both rows or columns to reduce the matrix.
 
-###OpenMP
+### OpenMP
 
 The OpenMP code can be compiled, e.g., with the following command:
 
@@ -53,7 +53,7 @@ Please note that we have tested GCC only. For GCC, the default is no optimizatio
 
 The argument 'number_of_threads' specifies the number of threads. For the rest of the arguments, please refer to the CUDA version.
 
-###MPI
+### MPI
 
 In order to compile and execute the MPI version, an MPI library should be installed. This code was tested with Open MPI. The MPI version can be compiled, e.g., with the following command:
 
@@ -112,15 +112,15 @@ Furthermore, in case the program was allowed to preprocess the matrix, the progr
 
 The program also writes the optimal strategy, defining the L norm of a given order, into a file. The filename has the following format: strategy_Ld.txt, where 'd' means the order of the L norm. For example, the file 'strategy_L2.txt' contains the optimal strategy vector associated with the L_2 norm of the matrix. These files consist of entries ±1 if d = 1. If d ≥ 2, the entries of the strategy vectors in the files are from {0,1,...,d-1}.
 
-##Testing the code for performance
+## Testing the code for performance
 
 In this section, we describe how to run calculations to figure out the optimal grid and block sizes for the CUDA code. These auxiliary codes are written in bash, Octave, and gnuplot.
 
-*gen_mtx.m*
+### gen_mtx.m
 
 To test the code for performance, one needs to generate a matrix for which the calculations are performed. The Octave script 'gen_mtx.m' generates a random matrix. It has two important parameters, namely the variables 'n' and 'r'. The script produces a square matrix, the size (number of rows or columns) of which is given by 'n'. The variable 'r' defines the interval, as \[-r,r\], from which the entries of the matrix are taken as random integers. The output of the script will be a file containing a matrix. The name of the matrix describes its size. For instance, if the name of the file is 'mtx17.txt', the size of the matrix is 17×17.
 
-*time_order_1.sh*
+### time_order_1.sh
 
 The file 'time_order_1.sh' is a template for running the CUDA program and measuring the runtimes. To run this script, 'L_CUDA.cu', 'functions.h', the shell script itself, and the file containing the matrix should be copied to the working directory. The variable 'order' in the shell script stands for the order of the L norm the program will compute. The variable 'iteration' determines the number of times the program will calculate the L norm of the matrix (in order to sample variability in the runtime). This sample code assumes an input matrix file named 'mtx38.txt'; this can be adjusted in line 25. The variables 'threads' and 'blocks' determine the block (number of threads in a block) and grid (number of blocks) sizes the program will use. By default, the 'threads' vector is 1024, 512, etc., and the 'blocks' vector is 8, 16, etc. This means that the CUDA program will first be invoked 'iterations' times with block size 1024 and grid size 8; after that, it will be invoked with block size 512 grid size 16; and so on. As one can see, the total number of threads (the grid size × the block size) is the same in the subsequent steps.
 
@@ -130,7 +130,7 @@ The script generates two kinds of output files. The names of the files indicate 
 	1. The first kind uses names of the following form: 'meas_thread_1024_block_16_order_1.dat'. The block size is 1024, the grid size is 16, and the order of the L norm is 1 in this example. Such a file contains the standard output of the corresponding CUDA program along with that of the built-in 'time' command.
 	2. For the second kind, names take the following form: 'proc_thread_1024_block_16_order_1.dat'. The parameters are the same. Such a file contains the runtimes of the corresponding CUDA program in seconds.
 
-*calc_Statistics.m*
+### calc_Statistics.m
 	
 The Octave script 'calc_Statistics.m' can postprocess the 'proc_thread_...' files to generate the statistics of the execution times. The following variables must be defined in this script:
  1. 'subdir' should be defined as empty if the Octave script can be found in the same directory as the 'proc_thread_...' files. In case the Octave script is in one directory and the 'proc_thread_...' files can be found in a subfolder of that directory, 'subdir' should be the name of this subfolder.
@@ -150,6 +150,6 @@ and
  8. and the maximum
 of the runtimes corresponding to the given grid and block size.
 
-*runTime.gnu*
+### runTime.gnu
 
 The output of 'calc_Statistics.m' can be plotted by the 'runTime.gnu' gnuplot script. It will generate a file 'runTime.eps' which depicts the runtime as a function of the block size. The candlesticks depict the minimal runtime, the first and third quartile, and the maximum of the runtimes. The total number of threads is the same for candlesticks plotted with the same color.
