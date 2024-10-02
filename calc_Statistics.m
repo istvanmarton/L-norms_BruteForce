@@ -14,11 +14,11 @@ blocks=[16, 32, 64, 128, 256, 512, 1024, 2048];
 			total_seconds = [];
 			while(!feof(fid))
 				str = fgets (fid);
-				res = textscan (str, "%dm%d,%ds");
+				res = textscan (str, "%dm%d,%ds"); # If the 'time' command writes out the results with a decimal point instead of a decimal comma, this line should be modified to: res = textscan (str, "%dm%f");
 				minutes = double(res{1});
 				seconds = double(res{2});
-				fraction = double(res{3});
-				total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ];
+				fraction = double(res{3}); # If the 'time' command writes out the results with a decimal point instead of a decimal comma, the decimal variable should be deleted or commented out.
+				total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ]; # If the 'time' command writes out the results with a decimal point instead of a decimal comma, this line should be modified to: total_seconds = [total_seconds; minutes * 60 + seconds ];
 			end
 			fclose(fid);
 			q = quantile(total_seconds, [0, 0.25, 0.5, 0.75, 1]);
@@ -41,11 +41,11 @@ blocks=[8, 16, 32, 64, 128, 256, 512, 1024];
 			total_seconds = [];
 			while(!feof(fid))
 				str = fgets (fid);
-				res = textscan (str, "%dm%d,%ds");
+				res = textscan (str, "%dm%d,%ds"); # If the 'time' command writes out the results with a decimal point instead of a decimal comma, this line should be modified to: res = textscan (str, "%dm%f");
 				minutes = double(res{1});
 				seconds = double(res{2});
-				fraction = double(res{3});
-				total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ];
+				fraction = double(res{3}); # If the 'time' command writes out the results with a decimal point instead of a decimal comma, the decimal variable should be deleted or commented out.
+				total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ]; # If the 'time' command writes out the results with a decimal point instead of a decimal comma, this line should be modified to: total_seconds = [total_seconds; minutes * 60 + seconds ];
 			end
 			fclose(fid);
 			q = quantile(total_seconds, [0, 0.25, 0.5, 0.75, 1]);
