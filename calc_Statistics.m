@@ -17,7 +17,7 @@ blocks=[16, 32, 64, 128, 256, 512, 1024, 2048];
 				res = textscan (str, "%dm%f"); % If the 'time' command writes out the results with decimal commas instead of decimal points, this line should be modified to: res = textscan (str, "%dm%d,%ds");
 				minutes = double(res{1});
 				seconds = double(res{2});
-				%fraction = double(res{3}); % If the 'time' command writes out the results with decimal commas instead of decimal points, the decimal variable along with this line should be uncommented.
+				%fraction = double(res{3}); % If the 'time' command writes out the results with decimal commas instead of decimal points, the fraction variable along with this line should be uncommented.
 				total_seconds = [total_seconds; minutes * 60 + seconds ]; % If the 'time' command writes out the results with decimal commas instead of decimal points, this line should be modified to: total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ];
 			end
 			fclose(fid);
@@ -44,7 +44,7 @@ blocks=[8, 16, 32, 64, 128, 256, 512, 1024];
 				res = textscan (str, "%dm%f"); % If the 'time' command writes out the results with decimal commas instead of decimal points, this line should be modified to: res = textscan (str, "%dm%d,%ds");
 				minutes = double(res{1});
 				seconds = double(res{2});
-				%fraction = double(res{3}); % If the 'time' command writes out the results with decimal commas instead of decimal points, the decimal variable along with this line should be uncommented.
+				%fraction = double(res{3}); % If the 'time' command writes out the results with decimal commas instead of decimal points, the fraction variable along with this line should be uncommented.
 				total_seconds = [total_seconds; minutes * 60 + seconds ]; % If the 'time' command writes out the results with decimal commas instead of decimal points, this line should be modified to: total_seconds = [total_seconds; minutes * 60 + seconds + fraction/1000 ];
 			end
 			fclose(fid);
