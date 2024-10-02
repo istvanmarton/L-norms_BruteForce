@@ -132,7 +132,7 @@ The script generates two kinds of output files. The names of the files indicate 
 
 ### calc_Statistics.m
 	
-The Octave script 'calc_Statistics.m' can postprocess the 'proc_thread_...' files to generate the statistics of the execution times. The following variables must be defined in this script:
+The Octave script 'calc_Statistics.m' can postprocess the 'proc_thread_...' files to generate the statistics of the execution times. We need to mention that the current version of the code assumes decimal point, namely that the elapsed time is written out by the 'time' command as %dm%d.%ds, where %d means integer. In comment, we provide instructions on how to modify the code to run with decimal commas. The following variables must be defined in this script:
  1. 'subdir' should be defined as empty if the Octave script can be found in the same directory as the 'proc_thread_...' files. In case the Octave script is in one directory and the 'proc_thread_...' files can be found in a subfolder of that directory, 'subdir' should be the name of this subfolder.
  2. 'order' refers to the order of the L norm for which the calculations were performed.
  3. 'threads' must be the same as in the shell script 'time_order_1.sh'.
