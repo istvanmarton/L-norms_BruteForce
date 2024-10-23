@@ -104,7 +104,7 @@ The program prints here
  + the value of the L norm.
 
 Furthermore, in case the program was allowed to preprocess the matrix, the program writes out the performed reduction steps. For instance:
- + 'row 0 entries are zeros.' means the entries of the zeroth row of the matrix are zeros, and that row was deleted.
+ + 'row 1 entries are zeros.' means the entries of the first row of the matrix are zeros, and that row was deleted.
  + 'col 3 was subtracted from 1' means column 3 was subtracted from column 1, and column 3 was deleted.
  + 'row 5 was added to 1.' means row 5 was added to row 1, and row 5 was deleted.
 
