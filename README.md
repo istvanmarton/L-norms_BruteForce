@@ -4,7 +4,7 @@ This repository accompanies the article "Classical bounds on correlation-type Be
 
 A C implementation utilizing CUDA, OpenMP, and MPI has been made accessible in this repository under the source files L_CUDA.cu, L_OpenMP.c, and L_MPI.c, respectively; for the input, the matrix entries need to be converted to integers by an appropriate rescaling of the matrix (as the $L_d$ norms scale linearly with a multiplicative factor).
 
-Please note that the testing was carried out on a Linux environment.
+Please note that the testing was carried out in a Linux environment.
 
 ## Compilation and execution
 
