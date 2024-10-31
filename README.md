@@ -84,7 +84,7 @@ The code is prepared for representing the matrix entries as an arbitrarily chose
  + line 60 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
  + line 362 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
 
-The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the the resulting number can be represented with a long long int.
+The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the resulting number can be represented with a long long int.
 
 ## Input
 
