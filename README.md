@@ -81,8 +81,8 @@ Please note: If the product of the variables 'length' and 'RANK_OF_NORM' is too 
 
 The code is prepared for representing the matrix entries as an arbitrarily chosen integer type. The default is 'int'. Suppose one intends to use 'long long int'. In this case, the following modifications are needed in 'functions.h':
  + line 11: 'typedef int int_type;' -> 'typedef long long int int_type;'
- + line 59 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
- + line 412 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
+ + line 60 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
+ + line 362 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
 
 The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the the resulting number can be represented with a long long int.
 
