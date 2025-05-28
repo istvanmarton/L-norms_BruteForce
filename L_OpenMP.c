@@ -333,9 +333,9 @@ void load_parameters(item* first, item_calc* second, int* argc, char** argv, int
 	matrix_read(first);
 	eliminate_zero_rows_cols(first, second);
 	if(first->stat == 'y' || first->stat == 'r' || first->stat == 'Y' || first->stat == 'R') {calc_reduce_matrix_rows(first, second); }
-	if(first->stat == 'y' || first->stat == 'c' || first->stat == 'Y' || first->stat == 'C') {calc_reduce_matrix_cols(first, second); if(second->n > 1) {calc_reduce_matrix_cols_sign(first, second);} }
+	if(first->stat == 'y' || first->stat == 'c' || first->stat == 'Y' || first->stat == 'C') {calc_reduce_matrix_cols(first, second); if(first->n_original > 1) {calc_reduce_matrix_cols_sign(first, second);} }
 	if(first->stat == 'y' || first->stat == 'r' || first->stat == 'Y' || first->stat == 'R' || first->stat == 'c' || first->stat == 'C') { delete_rows(first, second); delete_cols(first, second);}
-	if(second->n == 1) {convert_mtx_to_vec_Transpose(first, second); }
+	if(first->n_original == 1) {convert_mtx_to_vec_Transpose(first, second); }
 	else {convert_mtx_to_vec_noTranspose(first, second);}
 	calc_Parameters(first, second, num_of_threads); // Calculates the necessary parameters for the calculation.
 }
