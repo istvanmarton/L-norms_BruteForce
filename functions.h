@@ -360,7 +360,7 @@ void print_results(item* first, item_calc* second){
 	strategy = (int*) calloc(first->iRows, sizeof(int));
 		 
 	printf("L%d is: %d\n", first->n_original, second->Lnorm); // Write out the value of the L norm to the screen.
-	sprintf(fileOutput,"strategy_L%d.txt", second->n);
+	sprintf(fileOutput,"strategy_L%d.txt", first->n_original);
 	fp = fopen(fileOutput, "w");
 	j = 0;
 	for(i=0; i<(first->original_length); i++) {
