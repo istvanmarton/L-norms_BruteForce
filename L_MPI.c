@@ -54,7 +54,7 @@ void calc_Parameters(item* first, item_calc* second, int* num_of_threads){
 	if(first->n_original < second->iRows_reduced || first->n_original == 1) {second->n = first->n_original;}
 	else{
 		second->n = second->iRows_reduced > 1 ? second->iRows_reduced : 2;
-		printf("Preprocessed matrix has fewer or equal number of rows (%d) as the order of the L norm (%d).\n",second->iRows_reduced ,first->n_original);
+		printf("The preprocessed matrix has a number of rows (%d) less than or equal to the order of the L norm (%d).\n",second->iRows_reduced ,first->n_original);
 	}
 
 	if(second->n == 1){
