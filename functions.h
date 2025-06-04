@@ -357,7 +357,7 @@ void print_results(item* first, item_calc* second){
 	int i, j, val, *strategy;
 	char fileOutput[1024]; // The variable 'fileOutput' is the name of the file to which the strategy vector found to be optimal is written
 	FILE *fp;
-	strategy = (int*) calloc(first->iRows, sizeof(int));
+	strategy = (int*) calloc(first->original_length, sizeof(int));
 		 
 	printf("L%d is: %d\n", first->n_original, second->Lnorm); // Write out the value of the L norm to the screen.
 	sprintf(fileOutput,"strategy_L%d.txt", first->n_original);
