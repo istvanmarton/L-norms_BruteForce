@@ -267,28 +267,20 @@ void calc_reduce_matrix_cols(item* first, item_calc* second){
 	second->iCols_reduced = second->iCols_reduced-counter_c;
 }
 
-void convert_mtx_to_vec_noTranspose(item* first, item_calc* second){
-	int i, j;
+void convert_mtx_to_vec(item* first, item_calc* second){
+	int i, j, iShorter; //iShorter is the number of rows or columns, whichever is less;
 	second->mtx_as_vec = (int_type*) calloc(second->iRows_reduced * second->iCols_reduced, sizeof(int_type));
-	for(i = 0; i < second->iRows_reduced; i++){
-		for(j = 0; j < second->iCols_reduced; j++){
-			second->mtx_as_vec[i * second->iCols_reduced + j] = first->matrix[i][j];
-		}
-	}
-
-	first->original = first->original_r;
-	first->original_length = first->iRows;
-}
-
-void convert_mtx_to_vec_Transpose(item* first, item_calc* second){
-	int i, j, iShorter, iLonger; //iShorter is the number of rows or columns, whichever is less; iLonger is the number of rows or columns, whichever is greater
-	second->mtx_as_vec = (int_type*) calloc(second->iRows_reduced * second->iCols_reduced, sizeof(int_type));
-	if( second->iRows_reduced > second->iCols_reduced ){ //In this if else sequence the code transposes the matrix if necessary and transforms the matrix into a vector
+	if( first->n_original == 1 && second->iRows_reduced > second->iCols_reduced ){ //In this if else sequence the code transposes the matrix if necessary and transforms the matrix into a vector
 		for(j = 0; j < second->iCols_reduced; j++){
 			for(i = 0; i < second->iRows_reduced; i++){
 				second->mtx_as_vec[j * second->iRows_reduced + i] = first->matrix[i][j];
 			}
 		}
+		iShorter = second->iCols_reduced;
+		second->iCols_reduced = second->iRows_reduced;
+		second->iRows_reduced = iShorter;
+		first->original = first->original_c;
+		first->original_length = first->iCols;
 	}
 	else{
 		for(i = 0; i < second->iRows_reduced; i++){
@@ -296,24 +288,10 @@ void convert_mtx_to_vec_Transpose(item* first, item_calc* second){
 				second->mtx_as_vec[i * second->iCols_reduced + j] = first->matrix[i][j];
 			}
 		}
-	}
-	
-	if(second->iRows_reduced > second->iCols_reduced) {
-		iShorter = second->iCols_reduced;
-		iLonger = second->iRows_reduced;
-		first->original = first->original_c;
-		first->original_length = first->iCols;
-	}
-	else {
-		iShorter = second->iRows_reduced;
-		iLonger = second->iCols_reduced;
 		first->original = first->original_r;
 		first->original_length = first->iRows;
 	}
-	second->iRows_reduced = iShorter;
-	second->iCols_reduced = iLonger;
 }
-
 
 void mtx_free(item* first){
 	int i;
