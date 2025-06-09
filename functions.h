@@ -343,18 +343,12 @@ void print_results(item* first, item_calc* second){
 	j = 0;
 	for(i=0; i<(first->original_length); i++) {
 		if(first->original[i] == 0) {
-			if(j == (second->iRows_reduced - 1)) {
-				if(second->n == 1) {val = 1;}
-				else {val = 0;}						
-			}
+			if(j == (second->iRows_reduced - 1)) {val = second->n == 1 ? 1 : 0; }
 			else {val = second->strategy[j];}
 			j++;
 		}
 		else {
-			if((first->original[i] == first->original_length)) { //When the entry of the first->original[i] vector is equal to first->original_length, it means that the i-th row consists exclusively zeros.
-				if(second->n == 1) {val = 1;}
-				else {val = 0;}
-			}
+			if((first->original[i] == first->original_length)) {val = second->n == 1 ? 1 : 0; } //When the entry of the first->original[i] vector is equal to first->original_length, it means that the i-th row consists exclusively zeros.
 			else if(first->original[i] < 0) {val = (strategy[-first->original[i] - 1] + 1) & 1; } //When the entry of the first->original[i] vector is negative, it means that the strategy is opposite to the (-first->original[i]-1)-th entry of the strategy vector. As the entries of the strategy vectors are zeros and ones, the current entry of the strategy vector should be negated. 
 			else {val = strategy[first->original[i] - 1]; } //When the entry of the first->original[i] vector is positive, it means that the strategy is the same as (first->original[i]-1)-th entry of the strategy vector.
 		}
