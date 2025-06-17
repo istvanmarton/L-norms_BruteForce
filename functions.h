@@ -44,21 +44,22 @@ typedef struct data_s item;
 void matrix_read(item* first){
 	int i = 0, j = 0, k = 0;
 	int_type value, *row;
+	double dValue;
 	first->matrix = NULL;
 	row = NULL;
 
-	char g, cNum[256];
+	char e='0', g, cNum[256];
 
 	FILE *fp;
 	fp = fopen(first->fileName,"r");
 	
 	do{
 		g = fgetc(fp);	
-		if((((g - '0') < 10) && ((g - '0') >= 0)) || (g == 'e') || ( g == 'E') || (g == '.') || (g == '+') || (g == '-')) {cNum[i] = g; i++;}
+		if((((g - '0') < 10) && ((g - '0') >= 0)) || (g == 'e') || ( g == 'E') || (g == '.') || (g == '+') || (g == '-')) {cNum[i] = g; i++; if(g == 'e' || g == 'E') {e = 'e';}}
 		else {
 			cNum[i] = '\0'; 
-			if(cNum[0] != '\0') {sscanf(cNum, "%d", &value); j++; i = 0;  row = (int_type*) realloc(row, j * sizeof(int_type)); row[j-1] = value;}
-			if( ((g == '\n') || (g == EOF)) && (j > 0)){first->iCols = j; j = 0; k++; first->matrix = (int_type**) realloc(first->matrix, k * sizeof(int_type*)); first->matrix[k-1] = row; row = NULL;}
+			if(cNum[0] != '\0') {if(e=='e') {sscanf(cNum, "%le", &dValue); value = dValue; e='0';} else {sscanf(cNum, "%d", &value);} j++; i = 0;  row = (int_type*) realloc(row, j * sizeof(int_type)); row[j-1] = value; }
+			if( ((g == '\n') || (g == EOF)) && (j > 0)){first->iCols = j; j = 0; k++; first->matrix = (int_type**) realloc(first->matrix, k * sizeof(int_type*)); first->matrix[k-1] = row; row = NULL; }
 		}
 	}while(!feof(fp));
 	first->iRows = k;
