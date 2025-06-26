@@ -1,10 +1,3 @@
-/*****************************
-
-WRITTEN BY ISTVÁN MÁRTON
-
-*****************************/
-
-#include<stdio.h>
 #include<math.h>
 #include<stdlib.h>
 #include "functions.h"
@@ -16,6 +9,43 @@ __device__ void calc_jmin_jmax(int* index, unsigned long long int* jMin, unsigne
 	else *jMax += *steps_remainder;
 	if(*index <= *steps_remainder) *jMin += *index;
 	else *jMin += *steps_remainder;
+}
+
+__global__ void LM(int_type* d_mtx_as_vec, unsigned long long int steps, unsigned long long int steps_remainder, int_type *d_L1_vector, int *d_L1_strategy, int iShorter, int iLonger){ // This function calculates the L1 norm.
+	int i, l, index, vect[NUM_OF_BITS - 1];
+	int_type temp[length], product, L1;
+	unsigned long long int number, jMax, jMin, iNumofZeros, aux;
+
+	index = blockIdx.x * blockDim.x + threadIdx.x; // Index of threads.
+	calc_jmin_jmax(&index, &jMin, &jMax, &steps, &steps_remainder); // This function calculates the minimal (jMin-th) and the maximal (jMax-th) word of the binary reflected Gray code for which the calculations must be performed by a given thread.
+
+	number = jMin;
+	for(l=0; l < iLonger; l++) {temp[l] = d_mtx_as_vec[(iShorter - 1) * iLonger + l];} // As the code can consider a row of the matrix with a fixed sign, it considers the last row of the matrix with +1.
+	product = 0;
+	for(i = 0 ; (iShorter - 1) > i; i++){
+		iNumofZeros=(unsigned long long int) 1 << i;
+		vect[i] = ((number+ iNumofZeros) >> (i+1)) & 1; // floor((j + 2^i)/2^(i+1)) Logical can be 0 and 1. logical is the number-th word and i-th digit of the BRGC.
+		if(vect[i] == 1){for(l=0; l < iLonger; l++){temp[l] += d_mtx_as_vec[i * iLonger + l]; }} // The code determines the vector-matrix multiplication belonging to the number-th word of the BRGC.
+		else {for(l=0; l < iLonger; l++){temp[l] -= d_mtx_as_vec[i * iLonger + l]; }}				
+	}
+	product += temp[0]; for(l = 1; l < iLonger; l++) { product += abs(temp[l]);} // The code calculates the L1 Bell value belonging to the number-th word of the BRGC.
+	L1 = product; 
+	for(l=0; l< (iShorter - 1); l++){d_L1_strategy[index * (iShorter - 1) + l] = vect[l];} // The program stores the strategy vector belonging to the number-th BRGC word in the d_L1_strategy vector.
+
+	for(number=jMin + 1; number <= jMax; number++){ //The code determines the BRGC words until number variable reaches jMax.
+		product = 0;
+		aux = number;
+		for(i = 0; (aux & 1) == 0; i++){
+			aux = aux >> 1;
+		}
+		if(vect[i] == 0){vect[i] = 1; temp[0] += 2 * d_mtx_as_vec[i * iLonger]; product += temp[0]; for(l=1; l < iLonger; l++){temp[l] += 2 * d_mtx_as_vec[i * iLonger + l]; product += abs(temp[l]);}} // When the i-th digit is changed, the code changes the result of the vector-matrix multiplication. It only needs to deal with the i-th row of the matrix.
+		else {vect[i] = 0; temp[0] -= 2 * d_mtx_as_vec[i * iLonger]; product += temp[0]; for(l=1; l < iLonger; l++){temp[l] -= 2 * d_mtx_as_vec[i * iLonger + l]; product += abs(temp[l]);}}
+		if(product > L1) {
+			L1 = product; // If the current L1 sum, stored in product, is greater than the previous one, it modifies both the value 
+			for(l=0; l<(iShorter - 1); l++){d_L1_strategy[index * (iShorter - 1) + l] = vect[l];} // and the corresponding strategy vector as well.
+		}
+	}
+	d_L1_vector[index] = L1; // Every thread writes the biggest found L1 sum to d_L1_vector.
 }
 
 __global__ void L1(int_type* d_mtx_as_vec, unsigned long long int steps, unsigned long long int steps_remainder, int_type *d_L1_vector, int *d_L1_strategy, int iShorter, int iLonger){ // This function calculates the L1 norm.
@@ -258,8 +288,11 @@ void calc_Lnorm(item_calc* second, int* num_of_blocks, int* num_of_threads_per_b
 	cudaMalloc((void**)&d_Ln_vector, second->copyNum * sizeof(int_type)); // The code allocates memory in the device for the possible L norms.
 	cudaMalloc((void**)&d_Ln_strategy, second->copyNum * (second->iRows_reduced - 1) * sizeof(int)); // The code allocates memory for the strategies belonging to the possible L norms in the device.
 	cudaMemcpy(d_mtx_as_vec, second->mtx_as_vec, second->iRows_reduced * second->iCols_reduced * sizeof(int_type), cudaMemcpyHostToDevice); // The matrix is copied from RAM to GPU memory.
-	if(second->n == 1){ // If the order of the L norm is 1 then this part of the code will be executed.
+	if(second->n == 1 && second->marginal == 0){ // If the order of the L norm is 1 then this part of the code will be executed.
 		L1<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced); // The calculation of the L1 norm with GPU.
+	}
+	else if(second->n == 1 && second->marginal == 1){ // If the order of the L norm is 1 then this part of the code will be executed.
+		LM<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced); // The calculation of the L1 norm with GPU.
 	}
 	else if(second->n == 2){ // If the order of the L norm is 2 then this part of the code will be executed.
 		L2<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced);
@@ -342,7 +375,16 @@ void arguments_CUDA(item* first, int* num_of_blocks, int* num_of_threads_per_blo
 	
 	if(*argc < 6){first->stat = 'n';}
 	else {first->stat = argv[5][0];}
-	
+
+	if(*argc < 6 || first->n_original > 1){first->marginal = 0;}
+	else if(*argc == 6) {
+		if(argv[5][0] == 'm' || argv[5][0] == 'M') {first->marginal = 1;}
+		else {first->marginal = 0;}
+	}
+	else {
+		if(argv[6][0] == 'm' || argv[6][0] == 'M') {first->marginal = 1;}
+		else {first->marginal = 0;}
+	}
 	if(t > RANK_OF_NORM) {printf("The order of the L norm is too large. Please increase the RANK_OF_NORM variable in the code to %d and compile and run it again.\n", t); exit(-1);}
 	if(*num_of_threads_per_block > devProp->maxThreadsPerBlock) {printf("The maximum number of threads per block cannot be more than %d.\n", devProp->maxThreadsPerBlock); exit(-1);}
 }
