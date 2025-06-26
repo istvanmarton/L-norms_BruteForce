@@ -98,9 +98,9 @@ The argument 'number_of_processes' specifies the number of processes. For the re
 Please note: If the product of the variables 'length' and 'RANK_OF_NORM' is too large for a given GPU, the CUDA version may fail silently and return a zero $L$ norm value. For instance, when NVIDIA RTX 6000 Ada was used along with 'length = 4096' and 'RANK_OF_NORM = 20', and the matrix entries were represented as int, the code returned with zero for the $L_4$ norm of the matrix, and the CUDA kernel was not even invoked.
 
 The code is prepared for representing the matrix entries as an arbitrarily chosen integer type. The default is 'int'. Suppose one intends to use 'long long int'. In this case, the following modifications are needed in 'functions.h':
- + line 11: 'typedef int int_type;' -> 'typedef long long int int_type;'
- + line 60 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
- + line 362 (in function 'print_results'): 'printf("L%d is: %d\n", second->n, second->Lnorm);' -> 'printf("L%d is: %lld\n", second->n, second->Lnorm);'
+ + line 5: 'typedef int int_type;' -> 'typedef long long int int_type;'
+ + line 57 (in function 'matrix_read'): 'sscanf(cNum, "%d", &value);' -> 'sscanf(cNum, "%lld", &value);'
+ + line 359 (in function 'print_results'): 'printf("L%d is: %d\n", first->n_original, second->Lnorm);' -> 'printf("L%d is: %lld\n", first->n_original, second->Lnorm);'
 
 The abs() functions in *all of the source files* may also need to be modified to llabs(). We need to mention that calculating with 'long long int' can cause significantly longer execution times compared to the case when 'int' is used. Matrix preprocessing can be used when multiplying any two entries of the matrix does not cause overflow, namely the resulting number can be represented with a long long int.
 
@@ -122,7 +122,7 @@ The program prints here
  + the number of blocks and the number of threads for the CUDA version, the number of threads for the OpenMP version, and number of processes for the MPI version,
  + the maximal length of the strategy vector the computer can deal with,
  + a warning in case the preprocessed matrix has fewer or equal number of rows as the order of the L norm (e.g., 'Preprocessed matrix has fewer or equal number of rows (2) as the order of the $L$ norm (4).') and
- + the value of the $L$ norm or the local bound of a Bell expression with marginals. The latter case is indicated by printing L1M in place of L1.
+ + the value of the $L$ norm or the local bound of a Bell expression with marginals. The latter case is indicated by printing LM in place of L1.
 
 Furthermore, in case the program was allowed to preprocess the matrix, the program writes out a warning in case the input matrix is a zero matrix ('This is a zero matrix.') and the performed reduction steps. For instance:
  + 'row 1 entries are zeros.' means the entries of the first row of the matrix are zeros, and that row was deleted.
@@ -131,7 +131,7 @@ Furthermore, in case the program was allowed to preprocess the matrix, the progr
 
 ### Output file
 
-The program also writes the optimal strategy, defining the $L$ norm of a given order, into a file. The filename has the following format: strategy_Ld.txt, where 'd' means the order of the $L$ norm. For example, the file 'strategy_L2.txt' contains the optimal strategy vector associated with the $L_2$ norm of the matrix. If the local bound of a Bell expression with marginals is calculated, the output file will be strategy_L1M.txt. These files consist of entries ±1 if $d = 1$. If $d ≥ 2$, the entries of the strategy vectors in the files are from ${0,1,...,d-1}$.
+The program also writes the optimal strategy, defining the $L$ norm of a given order, into a file. The filename has the following format: strategy_Ld.txt, where 'd' means the order of the $L$ norm. For example, the file 'strategy_L2.txt' contains the optimal strategy vector associated with the $L_2$ norm of the matrix. If the local bound of a Bell expression with marginals is calculated, the output file will be strategy_LM.txt. These files consist of entries ±1 if $d = 1$. If $d ≥ 2$, the entries of the strategy vectors in the files are from ${0,1,...,d-1}$.
 
 ## Testing the code for performance
 
