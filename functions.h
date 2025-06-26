@@ -1,9 +1,3 @@
-/*****************************
-
-WRITTEN BY ISTVÁN MÁRTON
-
-*****************************/
-
 #include<stdio.h>
 #define length 4096
 #define RANK_OF_NORM 10
@@ -19,6 +13,7 @@ struct data_k{
 	unsigned long long int steps;
 	unsigned long long int steps_remainder;
 	unsigned long long int copyNum;
+	int marginal;
 	int_type *mtx_as_vec;
 	int *strategy;
 };
@@ -34,6 +29,7 @@ struct data_s{
 	int *original_c;
 	char fileName[1024];
 	char stat;
+	int marginal;
 	int *original;
 	int original_length;
 	unsigned long long int total_num_to_calc;
@@ -105,6 +101,7 @@ void eliminate_zero_rows_cols(item* first, item_calc* second){
 	for(i = 0; i < first->iCols; i++){first->original_c[i] = 0;}
 	second->iRows_reduced = first->iRows;
 	second->iCols_reduced = first->iCols;
+	second->marginal = first->marginal;
 
 	if(first->stat == 'y' || first->stat == 'Y' || first->stat == 'r' || first->stat == 'R' || first->stat == 'c' || first->stat == 'C'){
 		counter_r = 0;
@@ -114,7 +111,7 @@ void eliminate_zero_rows_cols(item* first, item_calc* second){
 			for(k = 1; (k < first->iCols) && zero; k++){
 				if(first->matrix[i][k] != 0) {zero = 0;}
 			}
-			if(zero) {first->original_r[i] = first->iRows; counter_r++; printf("row %d entries are zeros.\n", i+1);}
+			if(zero) {first->original_r[i] = first->iRows; if(first->marginal == 0 || i > 0) {counter_r++; printf("row %d entries are zeros.\n", i+1);}}
 		}
 		second->iRows_reduced = first->iRows-counter_r;
 
@@ -125,9 +122,14 @@ void eliminate_zero_rows_cols(item* first, item_calc* second){
 			for(k = 1; (k < first->iRows) && zero; k++){
 				if(first->matrix[k][i] != 0) {zero = 0;}
 			}
-			if(zero) {first->original_c[i] = first->iCols; counter_c++; printf("col %d entries are zeros.\n", i+1);}
+			if(zero) {first->original_c[i] = first->iCols; if(first->marginal == 0 || i > 0) {counter_c++; printf("col %d entries are zeros.\n", i+1);}}
 		}
 		second->iCols_reduced = first->iCols-counter_c;
+		
+		if(first->marginal == 1) {
+			if(first->original_r[0] == first->iRows && first->original_c[0] == first->iCols) {second->marginal = 0; second->iRows_reduced--; second->iCols_reduced--; printf("The entries of the first row and column are zeros.\n");}
+			else {first->original_r[0] = 0; first->original_c[0] = 0;}
+		}
 	}
 }
 
@@ -216,7 +218,7 @@ void calc_reduce_matrix_rows(item* first, item_calc* second){
 	int counter_r, i, j, k, index;
 	counter_r = 0;
 	
-	for(i = 0; i < first->iRows; i++){
+	for(i = first->marginal; i < first->iRows; i++){
 		if(first->original_r[i] != 0) continue; 
 		for(j = i+1; j < first->iRows; j++){
 			if(first->original_r[j] != 0) continue;
@@ -245,7 +247,7 @@ void calc_reduce_matrix_cols(item* first, item_calc* second){
 	int counter_c, i, j, k, index;
 	counter_c = 0;
 	 
-	for(i = 0; i < first->iCols; i++){
+	for(i = first->marginal; i < first->iCols; i++){
 		if(first->original_c[i] != 0) continue;
 		for(j = i+1; j < first->iCols; j++){
 			if(first->original_c[j] != 0) continue;
@@ -269,7 +271,7 @@ void calc_reduce_matrix_cols(item* first, item_calc* second){
 }
 
 void convert_mtx_to_vec(item* first, item_calc* second){
-	int i, j, iShorter; //iShorter is the number of rows or columns, whichever is less;
+	int i, j, iShorter; //iShorter is the number of rows or columns, whichever is less
 	second->mtx_as_vec = (int_type*) calloc(second->iRows_reduced * second->iCols_reduced, sizeof(int_type));
 	if( first->n_original == 1 && second->iRows_reduced > second->iCols_reduced ){ //In this if else sequence the code transposes the matrix if necessary and transforms the matrix into a vector
 		for(j = 0; j < second->iCols_reduced; j++){
@@ -291,6 +293,17 @@ void convert_mtx_to_vec(item* first, item_calc* second){
 		}
 		first->original = first->original_r;
 		first->original_length = first->iRows;
+	}
+	
+	if(second->marginal == 1 && first->original[0] != first->original_length) {
+		int_type *row;
+	        row = (int_type*) calloc(second->iCols_reduced, sizeof(int_type));
+	        for(i = 0; i < second->iCols_reduced; i++) {
+	        	row[i] = second->mtx_as_vec[(second->iRows_reduced - 1) * second->iCols_reduced + i];
+	        	second->mtx_as_vec[(second->iRows_reduced - 1) * second->iCols_reduced + i] = second->mtx_as_vec[i];
+	        	second->mtx_as_vec[i] = row[i];
+	        }
+	        free(row);
 	}
 }
 
@@ -337,19 +350,32 @@ void print_results(item* first, item_calc* second){
 	char fileOutput[1024]; // The variable 'fileOutput' is the name of the file to which the strategy vector found to be optimal is written
 	FILE *fp;
 	strategy = (int*) calloc(first->original_length, sizeof(int));
-		 
-	printf("L%d is: %d\n", first->n_original, second->Lnorm); // Write out the value of the L norm to the screen.
-	sprintf(fileOutput,"strategy_L%d.txt", first->n_original);
+	
+	if(first->n_original == 1 && first->marginal == 1){
+		printf("LM is: %d\n", second->Lnorm); // Write out the value of the L norm to the screen.
+		sprintf(fileOutput,"strategy_LM.txt");
+	}
+	else {
+		printf("L%d is: %d\n", first->n_original, second->Lnorm); // Write out the value of the L norm to the screen.
+		sprintf(fileOutput,"strategy_L%d.txt", first->n_original);
+	}
 	fp = fopen(fileOutput, "w");
 	j = 0;
-	for(i=0; i<(first->original_length); i++) {
+	for(i=0; i<first->original_length; i++) {
 		if(first->original[i] == 0) {
-			if(j == (second->iRows_reduced - 1)) {val = second->n == 1 ? 1 : 0; }
-			else {val = second->strategy[j];}
+			if(second->marginal == 1 && second->n == 1) { 
+				if(j == 0) {val = 1;}
+				else if(j == (second->iRows_reduced - 1)) {val = second->strategy[0];}
+				else {val = second->strategy[j];}
+			}
+			else{
+				if(j == (second->iRows_reduced - 1)) {val = second->n == 1 ? 1 : 0; }
+				else {val = second->strategy[j]; }
+			}
 			j++;
 		}
 		else {
-			if((first->original[i] == first->original_length)) {val = second->n == 1 ? 1 : 0; } //When the entry of the first->original[i] vector is equal to first->original_length, it means that the i-th row consists exclusively zeros.
+			if((first->original[i] == first->original_length)) {val = second->n == 1 ? 1 : 0; }//When the entry of the first->original[i] vector is equal to first->original_length, it means that the i-th row consists exclusively zeros.
 			else if(first->original[i] < 0) {val = (strategy[-first->original[i] - 1] + 1) & 1; } //When the entry of the first->original[i] vector is negative, it means that the strategy is opposite to the (-first->original[i]-1)-th entry of the strategy vector. As the entries of the strategy vectors are zeros and ones, the current entry of the strategy vector should be negated. 
 			else {val = strategy[first->original[i] - 1]; } //When the entry of the first->original[i] vector is positive, it means that the strategy is the same as (first->original[i]-1)-th entry of the strategy vector.
 		}
