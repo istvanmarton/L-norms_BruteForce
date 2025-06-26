@@ -1,10 +1,3 @@
-/*****************************
-
-WRITTEN BY ISTVÁN MÁRTON
-
-*****************************/
-
-#include<stdio.h>
 #include<math.h>
 #include<stdlib.h>
 #include <mpi.h>
@@ -19,68 +12,40 @@ void calc_jmin_jmax(int* index, unsigned long long int* jMin, unsigned long long
 	else *jMin += *steps_remainder;
 }
 
-void arguments_MPI(item* first, int* argc, char** argv){
-	FILE *fp;
-	int sd, t;
-	char msg[] = "Use the following command: mpirun number_of_threads ./L_MPI filename_of_matrix order_of_the_L_norm";
-	if(*argc < 3){
-		printf("Incorrect number of input arguments. %s\n", msg);
-		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-	}
-		
-	sprintf(first->fileName,"%s", argv[1]);
-	fp = fopen(first->fileName, "r");
-	if(fp == NULL){
-		printf("Please make sure that the file containig the matrix exists within this directory. %s\n", msg);
-		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-	}
-	fclose(fp);
-	
-	sd = sscanf(argv[2], "%d", &t);
-	if((sd == 0) || (t < 1)){
-		printf("Please make sure that the order of the L norm is a positive integer. %s\n", msg);
-		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-	}
-	first->n_original = t;
-	
-	if(*argc < 4){first->stat = 'n';}
-	else {first->stat = argv[3][0];}
-	
-	if(t > RANK_OF_NORM) {printf("The order of the L norm is too large. Please increase the RANK_OF_NORM variable in the code to %d and compile and run it again.\n", t); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
-}
+void LM(int_type* mtx_as_vec, int* index, unsigned long long int steps, unsigned long long int steps_remainder, int_type* L1_vector, int *L1_strategy, int iShorter, int iLonger){ // This function calculates the L1 norm.
+	int i, l, vect[NUM_OF_BITS - 1];
+	int_type temp[length], product, L1;
+	unsigned long long int number, jMax, jMin, iNumofZeros, aux;
 
-void calc_Parameters(item* first, item_calc* second, int* num_of_threads){
+	calc_jmin_jmax(index, &jMin, &jMax, &steps, &steps_remainder); // This function calculates the minimal (jMin-th) and the maximal (jMax-th) word of the binary reflected Gray code for which the calculations must be performed by a given thread.
 
-	if(first->n_original < second->iRows_reduced || first->n_original == 1) {second->n = first->n_original;}
-	else{
-		second->n = second->iRows_reduced > 1 ? second->iRows_reduced : 2;
-		printf("The preprocessed matrix has a number of rows (%d) less than or equal to the order of the L norm (%d).\n",second->iRows_reduced ,first->n_original);
+	number = jMin;
+	for(l=0; l < iLonger; l++) {temp[l] = mtx_as_vec[(iShorter - 1) * iLonger + l];} // As the code can consider a row of the matrix with a fixed sign, it considers the last row of the matrix with +1.
+	product = 0;
+	for(i = 0 ; (iShorter - 1) > i; i++){
+		iNumofZeros=(unsigned long long int) 1 << i;
+		vect[i] = ((number+ iNumofZeros) >> (i+1)) & 1; // floor((j + 2^i)/2^(i+1)) Logical can be 0 and 1. logical is the number-th word and i-th digit of the BRGC.
+		if(vect[i] == 1){for(l=0; l < iLonger; l++){temp[l] += mtx_as_vec[i * iLonger + l]; }} // The code determines the vector-matrix multiplication belonging to the number-th word of the BRGC.
+		else {for(l=0; l < iLonger; l++){temp[l] -= mtx_as_vec[i * iLonger + l]; }}				
 	}
+	product += temp[0]; for(l = 1; l < iLonger; l++) { product += abs(temp[l]);} // The code calculates the L1 Bell value belonging to the number-th word of the BRGC.
+	L1 = product; 
+	for(l=0; l< (iShorter - 1); l++){L1_strategy[l] = vect[l];} // The program stores the strategy vector belonging to the number-th BRGC word in the L1_strategy vector.
 
-	if(second->n == 1){
-		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : (unsigned long long int) 1 << (second->iRows_reduced - 1); //The total number of L sums to be calculated is 2^(iRows_reduced-1)
-		second->maxRows = NUM_OF_BITS - 1;
+	for(number=jMin + 1; number <= jMax; number++){ //The code determines the BRGC words until number variable reaches jMax.
+		product = 0;
+		aux = number;
+		for(i = 0; (aux & 1) == 0; i++){
+			aux = aux >> 1;
+		}
+		if(vect[i] == 0){vect[i] = 1; temp[0] += 2 * mtx_as_vec[i * iLonger]; product += temp[0]; for(l=1; l < iLonger; l++){temp[l] += 2 * mtx_as_vec[i * iLonger + l]; product += abs(temp[l]);}} // When the i-th digit is changed, the code changes the result of the vector-matrix multiplication. It only needs to deal with the i-th row of the matrix.
+		else {vect[i] = 0; temp[0] -= 2 * mtx_as_vec[i * iLonger]; product += temp[0]; for(l=1; l < iLonger; l++){temp[l] -= 2 * mtx_as_vec[i * iLonger + l]; product += abs(temp[l]);}}
+		if(product > L1) {
+			L1 = product; // If the current L1 sum, stored in product, is greater than the previous one, it modifies both the value 
+			for(l=0; l<(iShorter - 1); l++){L1_strategy[l] = vect[l];} // and the corresponding strategy vector as well.
+		}
 	}
-	else if(second->n == 2){
-		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : (unsigned long long int) 1 << (second->iRows_reduced - 1);
-		second->maxRows = NUM_OF_BITS - 1;
-	}
-	else if(second->n == 3){
-		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : pow(3, second->iRows_reduced - 1);
-		second->maxRows = (int) (floor (NUM_OF_BITS / log2(second->n)) + 1);
-	}
-	else{
-		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : pow(second->n, second->iRows_reduced - 1);
-		second->maxRows = (int) (floor (NUM_OF_BITS / log2(second->n)) + 1);
-	}
-	second->copyNum = *num_of_threads > first->total_num_to_calc ? first->total_num_to_calc : *num_of_threads; // copyNum is the actual number of threads. It cannot be more than the number of possible L values.
-	second->steps = second->copyNum == 0 ? 0 : first->total_num_to_calc/ second->copyNum;
-	second->steps_remainder = second->copyNum == 0 ? 0 : first->total_num_to_calc % second->copyNum;
-
-	printf("number of processes: %llu\n", second->copyNum);
-	printf("maximum length of strategy vector: %d\n", second->maxRows);
-	if(second->maxRows < second->iRows_reduced){printf("Matrix is too large. The matrix has %d rows after reduction.\n", second->iRows_reduced); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
-	if(length < second->iCols_reduced) {printf("Matrix is too large. The length variable %d should be bigger or equal than %d.\n", length, second->iCols_reduced); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
+	*L1_vector = L1; // Every thread writes the biggest found L1 sum to L1_vector.
 }
 
 void L1(int_type* mtx_as_vec, int* index, unsigned long long int steps, unsigned long long int steps_remainder, int_type* L1_vector, int *L1_strategy, int iShorter, int iLonger){ // This function calculates the L1 norm.
@@ -270,8 +235,11 @@ void Ln(int_type* mtx_as_vec, int* index, int* iPattern, unsigned long long int 
 void calc_Lnorm(item_calc* second, int* index) {
 	int i, iMax, Ln_vector;
 
-	if(second->n == 1) { // If the order of the L norm is 1 then this part of the code will be executed.
+	if(second->n == 1  && second->marginal == 0) { // If the order of the L norm is 1 then this part of the code will be executed.
 		L1(second->mtx_as_vec, index, second->steps, second->steps_remainder, &Ln_vector, second->strategy, second->iRows_reduced, second->iCols_reduced);
+	}
+	else if(second->n == 1  && second->marginal == 1) { // If the order of the L norm is 1 then this part of the code will be executed.
+		LM(second->mtx_as_vec, index, second->steps, second->steps_remainder, &Ln_vector, second->strategy, second->iRows_reduced, second->iCols_reduced);
 	}
 	else if(second->n == 2){ // if the order of the L norm is 2 then this part of the code will be executed.
 		L2(second->mtx_as_vec, index, second->steps, second->steps_remainder, &Ln_vector, second->strategy, second->iRows_reduced, second->iCols_reduced);
@@ -312,6 +280,79 @@ void calc_Lnorm(item_calc* second, int* index) {
 	} //Write out the strategy belonging to the L norm to file.
 }
 
+void arguments_MPI(item* first, int* argc, char** argv){
+	FILE *fp;
+	int sd, t;
+	char msg[] = "Use the following command: mpirun number_of_threads ./L_MPI filename_of_matrix order_of_the_L_norm";
+	if(*argc < 3){
+		printf("Incorrect number of input arguments. %s\n", msg);
+		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+	}
+		
+	sprintf(first->fileName,"%s", argv[1]);
+	fp = fopen(first->fileName, "r");
+	if(fp == NULL){
+		printf("Please make sure that the file containig the matrix exists within this directory. %s\n", msg);
+		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+	}
+	fclose(fp);
+	
+	sd = sscanf(argv[2], "%d", &t);
+	if((sd == 0) || (t < 1)){
+		printf("Please make sure that the order of the L norm is a positive integer. %s\n", msg);
+		MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+	}
+	first->n_original = t;
+	
+	if(*argc < 4){first->stat = 'n';}
+	else {first->stat = argv[3][0];}
+
+	if(*argc < 4 || first->n_original > 1){first->marginal = 0;}
+	else if(*argc == 4){
+		if(argv[3][0] == 'm' || argv[3][0] == 'M'){first->marginal = 1;}
+		else {first->marginal = 0;}
+	}
+	else {
+		if(argv[4][0] == 'm' || argv[4][0] == 'M'){first->marginal = 1;}
+		else {first->marginal = 0;}
+	}
+	if(t > RANK_OF_NORM) {printf("The order of the L norm is too large. Please increase the RANK_OF_NORM variable in the code to %d and compile and run it again.\n", t); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
+}
+
+void calc_Parameters(item* first, item_calc* second, int* num_of_threads){
+
+	if(first->n_original < second->iRows_reduced || first->n_original == 1) {second->n = first->n_original;}
+	else{
+		second->n = second->iRows_reduced > 1 ? second->iRows_reduced : 2;
+		printf("The preprocessed matrix has a number of rows (%d) less than or equal to the order of the L norm (%d).\n",second->iRows_reduced ,first->n_original);
+	}
+
+	if(second->n == 1){
+		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : (unsigned long long int) 1 << (second->iRows_reduced - 1); //The total number of L sums to be calculated is 2^(iRows_reduced-1)
+		second->maxRows = NUM_OF_BITS - 1;
+	}
+	else if(second->n == 2){
+		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : (unsigned long long int) 1 << (second->iRows_reduced - 1);
+		second->maxRows = NUM_OF_BITS - 1;
+	}
+	else if(second->n == 3){
+		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : pow(3, second->iRows_reduced - 1);
+		second->maxRows = (int) (floor (NUM_OF_BITS / log2(second->n)) + 1);
+	}
+	else{
+		first->total_num_to_calc = second->iRows_reduced == 0 ? 0 : pow(second->n, second->iRows_reduced - 1);
+		second->maxRows = (int) (floor (NUM_OF_BITS / log2(second->n)) + 1);
+	}
+	second->copyNum = *num_of_threads > first->total_num_to_calc ? first->total_num_to_calc : *num_of_threads; // copyNum is the actual number of threads. It cannot be more than the number of possible L values.
+	second->steps = second->copyNum == 0 ? 0 : first->total_num_to_calc/ second->copyNum;
+	second->steps_remainder = second->copyNum == 0 ? 0 : first->total_num_to_calc % second->copyNum;
+
+	printf("number of processes: %llu\n", second->copyNum);
+	printf("maximum length of strategy vector: %d\n", second->maxRows);
+	if(second->maxRows < second->iRows_reduced){printf("Matrix is too large. The matrix has %d rows after reduction.\n", second->iRows_reduced); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
+	if(length < second->iCols_reduced) {printf("Matrix is too large. The length variable %d should be bigger or equal than %d.\n", length, second->iCols_reduced); MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);}
+}
+
 void load_parameters(item* first, item_calc* second, int* argc, char** argv, int* num_of_threads){
 	arguments_MPI(first, argc, argv);
 	matrix_read(first);
@@ -324,9 +365,9 @@ void load_parameters(item* first, item_calc* second, int* argc, char** argv, int
 }
 
 void create_mpi_datatype(item_calc* second, MPI_Datatype *mpi_item_calc){
-	int lengths[8] = {1, 1, 1, 1, 1, 1, 1, 1};
-	MPI_Aint displacements[8];
-	MPI_Datatype types[8] = { MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_UNSIGNED_LONG_LONG, MPI_UNSIGNED_LONG_LONG, MPI_UNSIGNED_LONG_LONG };
+	int lengths[9] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+	MPI_Aint displacements[9];
+	MPI_Datatype types[9] = { MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_UNSIGNED_LONG_LONG, MPI_UNSIGNED_LONG_LONG, MPI_UNSIGNED_LONG_LONG, MPI_INT};
 	MPI_Aint base_address;
 	MPI_Get_address(second, &base_address);
 	MPI_Get_address(&second->n, &displacements[0]);
@@ -337,6 +378,7 @@ void create_mpi_datatype(item_calc* second, MPI_Datatype *mpi_item_calc){
 	MPI_Get_address(&second->steps, &displacements[5]);
 	MPI_Get_address(&second->steps_remainder, &displacements[6]);
 	MPI_Get_address(&second->copyNum, &displacements[7]);
+	MPI_Get_address(&second->marginal, &displacements[8]);
 	displacements[0] = MPI_Aint_diff(displacements[0], base_address);
 	displacements[1] = MPI_Aint_diff(displacements[1], base_address);
 	displacements[2] = MPI_Aint_diff(displacements[2], base_address);
@@ -345,7 +387,8 @@ void create_mpi_datatype(item_calc* second, MPI_Datatype *mpi_item_calc){
 	displacements[5] = MPI_Aint_diff(displacements[5], base_address);
 	displacements[6] = MPI_Aint_diff(displacements[6], base_address);
 	displacements[7] = MPI_Aint_diff(displacements[7], base_address);
-	MPI_Type_create_struct(8, lengths, displacements, types, mpi_item_calc);
+	displacements[8] = MPI_Aint_diff(displacements[8], base_address);
+	MPI_Type_create_struct(9, lengths, displacements, types, mpi_item_calc);
 	MPI_Type_commit(mpi_item_calc);
 }
 
