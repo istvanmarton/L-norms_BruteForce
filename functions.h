@@ -295,7 +295,7 @@ void convert_mtx_to_vec(item* first, item_calc* second){
 		first->original_length = first->iRows;
 	}
 	
-	if(second->marginal == 1 && first->original[0] != first->original_length) {
+	if(second->marginal == 1) {
 		int_type *row;
 	        row = (int_type*) calloc(second->iCols_reduced, sizeof(int_type));
 	        for(i = 0; i < second->iCols_reduced; i++) {
