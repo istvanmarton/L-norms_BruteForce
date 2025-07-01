@@ -173,7 +173,7 @@ void delete_cols(item* first, item_calc* second){
 
 void calc_reduce_matrix_cols_sign(item* first, item_calc* second){
 	short int negative, positive;
-	int counter_c, i, k, *original, index;
+	int counter_c, i, k, *original, index, mult;
 	counter_c = 0;
 	original = (int*) calloc(first->iCols, sizeof(int));
 	for(i = 0; i < first->iCols; i++) {original[i] = 0;}
@@ -198,12 +198,14 @@ void calc_reduce_matrix_cols_sign(item* first, item_calc* second){
 		index = i;
 		for(i = (index + 1); i < first->iCols; i++) {
 			if(first->original_c[i] != 0) continue;
-			first->original_c[i] = original[index] * original[i] * (index + 1);
-			if((original[index] * original[i]) < 0) {
+			mult = original[index] * original[i];
+			if(mult < 0) {
+				first->original_c[i] = -(index + 1);
 				copy_mtx_col(first, &index, &i);
 				printf("col %d was subtracted from %d\n", i+1, index+1);
 			}
-			if((original[index] * original[i]) > 0) {
+			if(mult > 0) {
+				first->original_c[i] = index + 1;
 				copy_mtx_col(first, &index, &i);
 				printf("col %d was added to %d\n", i+1, index+1);
 			}
