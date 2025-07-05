@@ -225,11 +225,9 @@ void calc_reduce_matrix_rows(item* first, item_calc* second){
 		for(j = i+1; j < first->iRows; j++){
 			if(first->original_r[j] != 0) continue;
 			mult = 1;
-			for(k = 0; (first->matrix[i][k] == 0) && (first->matrix[j][k] == 0) && mult && (k < first->iCols); k++){
-				if(((first->matrix[i][k] == 0) && (first->matrix[j][k] != 0)) || ((first->matrix[i][k] != 0) && (first->matrix[j][k] == 0))) {mult = 0;}
-			}
+			for(k = 0; (first->matrix[i][k] == 0) && (first->matrix[j][k] == 0) && (k < first->iCols); k++){}
+			if(((first->matrix[i][k] == 0) && (first->matrix[j][k] != 0)) || ((first->matrix[i][k] != 0) && (first->matrix[j][k] == 0))) {mult = 0;}
 			index = k;
-//printf("i: %d, j: %d, index: %d, k: %d\n",i, j, index, k);
 			for( ; (k < (first->iCols - 1)) && mult; k++){
 				multiple1 = (long long int) first->matrix[i][index] * first->matrix[j][k+1];
 				multiple2 = (long long int) first->matrix[j][index] * first->matrix[i][k+1];
@@ -254,11 +252,9 @@ void calc_reduce_matrix_cols(item* first, item_calc* second){
 		for(j = i+1; j < first->iCols; j++){
 			if(first->original_c[j] != 0) continue;
 			mult = 1;
-			for(k = 0; (first->matrix[k][i] == 0) && (first->matrix[k][j] == 0) && mult && (k < first->iRows); k++){
-				if(((first->matrix[k][i] == 0) && (first->matrix[k][j] != 0)) || ((first->matrix[k][i] != 0) && (first->matrix[k][j] == 0))) {mult = 0;}
-			}
+			for(k = 0; (first->matrix[k][i] == 0) && (first->matrix[k][j] == 0) && (k < first->iRows); k++){}
+			if(((first->matrix[k][i] == 0) && (first->matrix[k][j] != 0)) || ((first->matrix[k][i] != 0) && (first->matrix[k][j] == 0))) {mult = 0;}
 			index = k;
-//printf("i: %d, j: %d, index: %d, k: %d\n",i, j, index, k);
 			for( ; (k < (first->iRows-1)) && mult; k++){
 				multiple1 = (long long int) first->matrix[index][i] * first->matrix[k+1][j];
 				multiple2 = (long long int) first->matrix[index][j] * first->matrix[k+1][i];
