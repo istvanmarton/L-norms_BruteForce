@@ -43,24 +43,39 @@ void matrix_read(item* first){
 	double dValue;
 	first->matrix = NULL;
 	row = NULL;
-
 	char e='0', g, cNum[256];
 
 	FILE *fp;
 	fp = fopen(first->fileName,"r");
 	
 	do{
-		g = fgetc(fp);	
+        g = fgetc(fp);
 		if((((g - '0') < 10) && ((g - '0') >= 0)) || (g == 'e') || ( g == 'E') || (g == '.') || (g == '+') || (g == '-')) {cNum[i] = g; i++; if(g == 'e' || g == 'E') {e = 'e';}}
 		else {
-			cNum[i] = '\0'; 
-			if(cNum[0] != '\0') {if(e=='e') {sscanf(cNum, "%le", &dValue); value = dValue; e='0';} else {sscanf(cNum, "%d", &value);} j++; i = 0;  row = (int_type*) realloc(row, j * sizeof(int_type)); row[j-1] = value; }
-			if( ((g == '\n') || (g == EOF)) && (j > 0)){first->iCols = j; j = 0; k++; first->matrix = (int_type**) realloc(first->matrix, k * sizeof(int_type*)); first->matrix[k-1] = row; row = NULL; }
+            cNum[i] = '\0'; 
+			if(cNum[0] != '\0') {
+                if(e=='e') {sscanf(cNum, "%le", &dValue); value = dValue; e='0'; }
+                else {sscanf(cNum, "%d", &value); }
+                j++;
+                i = 0;
+                row = (int_type*) realloc(row, j * sizeof(int_type));
+ 	            if(row != NULL) {row[j-1] = value; }
+                else {perror("Memory allocation failed for row!\n");}
+			}
+			if( ((g == '\n') || (g == EOF)) && (j > 0)){
+                first->iCols = j;
+                j = 0;
+                k++;
+                first->matrix = (int_type**) realloc(first->matrix, k * sizeof(int_type*));
+                if(first->matrix != NULL) {first->matrix[k-1] = row; row = NULL;}
+                else {perror("Memory allocation failed for matrix!\n");}
+            }
 		}
-	}while(!feof(fp));
+	}while(g != EOF);
 	first->iRows = k;
 	printf("rows: %d, cols: %d\n",first->iRows, first->iCols); 
 	fclose(fp);
+	if (row != NULL) free(row);
 }
 
 void copy_mtx_row(item* first, int* i, int* j){
