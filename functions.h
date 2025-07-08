@@ -111,8 +111,10 @@ void eliminate_zero_rows_cols(item* first, item_calc* second){
 	int counter_r, counter_c, i, k;
 
 	first->original_r = (int*) calloc(first->iRows, sizeof(int));
+	if(first->original_r == NULL) {perror("Memory allocation failed for original_r in function eliminate_zero_rows_cols!\n");}
 	for(i = 0; i < first->iRows; i++){first->original_r[i] = 0;}
 	first->original_c = (int*) calloc(first->iCols, sizeof(int));
+	if(first->original_c == NULL) {perror("Memory allocation failed for original_c in function eliminate_zero_rows_cols!\n");}
 	for(i = 0; i < first->iCols; i++){first->original_c[i] = 0;}
 	second->iRows_reduced = first->iRows;
 	second->iCols_reduced = first->iCols;
@@ -151,6 +153,7 @@ void eliminate_zero_rows_cols(item* first, item_calc* second){
 void delete_rows(item* first, item_calc* second){
 	int *original_r, empty, i, j;
 	original_r = (int*) calloc(first->iRows, sizeof(int));
+	if(original_r == NULL) {perror("Memory allocation failed for original_r in function delete_rows!\n");}
 	for(i=0; i < first->iRows; i++){ original_r[i] = first->original_r[i];}
 
 	empty = 0;
@@ -169,7 +172,8 @@ void delete_rows(item* first, item_calc* second){
 
 void delete_cols(item* first, item_calc* second){
 	int *original_c, empty, i, j;
-	original_c = (int*) calloc(first->iCols, sizeof(int)); 
+	original_c = (int*) calloc(first->iCols, sizeof(int));
+	if(original_c == NULL) {perror("Memory allocation failed for original_c in function delete_cols!\n");}
 	for(i=0; i < first->iCols; i++){original_c[i] = first->original_c[i]; }
 
 	empty = 0;
@@ -191,6 +195,7 @@ void calc_reduce_matrix_cols_sign(item* first, item_calc* second){
 	int counter_c, i, k, *original, index, mult;
 	counter_c = 0;
 	original = (int*) calloc(first->iCols, sizeof(int));
+	if(original == NULL) {perror("Memory allocation failed for original in function calc_reduce_matrix_cols_sign!\n");}
 	for(i = 0; i < first->iCols; i++) {original[i] = 0;}
 
 	counter_c = 0;
@@ -286,6 +291,7 @@ void calc_reduce_matrix_cols(item* first, item_calc* second){
 void convert_mtx_to_vec(item* first, item_calc* second){
 	int i, j, iShorter; //iShorter is the number of rows or columns, whichever is less
 	second->mtx_as_vec = (int_type*) calloc(second->iRows_reduced * second->iCols_reduced, sizeof(int_type));
+	if(second->mtx_as_vec == NULL) {perror("Memory allocation failed for second->mtx_as_vec in function convert_mtx_to_vec!\n");}
 	if( first->n_original == 1 && second->iRows_reduced > second->iCols_reduced ){ //In this if else sequence the code transposes the matrix if necessary and transforms the matrix into a vector
 		for(j = 0; j < second->iCols_reduced; j++){
 			for(i = 0; i < second->iRows_reduced; i++){
@@ -311,6 +317,7 @@ void convert_mtx_to_vec(item* first, item_calc* second){
 	if(second->marginal == 1) {
 		int_type *row;
 	        row = (int_type*) calloc(second->iCols_reduced, sizeof(int_type));
+	        if(row == NULL) {perror("Memory allocation failed for row in function convert_mtx_to_vec!\n");}
 	        for(i = 0; i < second->iCols_reduced; i++) {
 	        	row[i] = second->mtx_as_vec[(second->iRows_reduced - 1) * second->iCols_reduced + i];
 	        	second->mtx_as_vec[(second->iRows_reduced - 1) * second->iCols_reduced + i] = second->mtx_as_vec[i];
@@ -342,6 +349,7 @@ void free_second(item_calc* second){
 int* calc_Pattern(int* n){
 	int i, *iPattern;
 	iPattern = (int*) calloc(2 * *n, sizeof(int));
+	if(iPattern == NULL) {perror("Memory allocation failed for iPattern in function calc_Pattern!\n");}
 	for(i = 0; i < *n; i++){
 		iPattern[i] = i;
 		iPattern[2 * *n-i-1]=i;
@@ -353,6 +361,7 @@ unsigned long long int* calc_iNumPower(item_calc* second){
 	int i;
 	unsigned long long int* iNumPower;
 	iNumPower = (unsigned long long int*) malloc(second->maxRows * sizeof(unsigned long long int));
+	if(iNumPower == NULL) {perror("Memory allocation failed for iNumPower in function calc_iNumPower!\n");}
 	iNumPower[0] = 1;
 	for(i = 1; i < (second->maxRows-1); i++){iNumPower[i] = second->n * iNumPower[i-1]; }
 	return iNumPower;
@@ -363,6 +372,7 @@ void print_results(item* first, item_calc* second){
 	char fileOutput[1024]; // The variable 'fileOutput' is the name of the file to which the strategy vector found to be optimal is written
 	FILE *fp;
 	strategy = (int*) calloc(first->original_length, sizeof(int));
+	if(strategy == NULL) {perror("Memory allocation failed for strategy in function print_results!\n");}
 	
 	if(first->n_original == 1 && first->marginal == 1){
 		printf("LM is: %d\n", second->Lnorm); // Write out the value of the L norm to the screen.
