@@ -410,8 +410,10 @@ int main(int argc, char *argv[]) {
 	
 	if(index != 0){
 		second.mtx_as_vec = (int*) malloc(second.iRows_reduced * second.iCols_reduced * sizeof(int));
+		if(second.mtx_as_vec == NULL) {perror("Memory allocation failed for second.mtx_as_vec in function main!\n");}
 	}
 	second.strategy = (int*)calloc(second.iRows_reduced - 1, sizeof(int));
+	if(second.strategy == NULL) {perror("Memory allocation failed for second.strategy in function main!\n");}
 	MPI_Bcast(second.mtx_as_vec, second.iRows_reduced * second.iCols_reduced, MPI_INT, 0, MPI_COMM_WORLD);
 	
 	if(second.iRows_reduced == 0 ) {

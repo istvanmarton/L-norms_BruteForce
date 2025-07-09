@@ -242,8 +242,11 @@ void calc_Lnorm(item_calc* second){
 	int i, iMax, *Ln_strategy;
 	int_type *Ln_vector;
 	Ln_vector = (int_type*) malloc(second->copyNum * sizeof(int_type)); // The code allocates memory for the possible L sums.
+	if(Ln_vector == NULL) {perror("Memory allocation failed for Ln_vector in function calc_Lnorm!");}
 	Ln_strategy = (int*) malloc(second->copyNum * (second->iRows_reduced - 1) * sizeof(int)); // The code allocates memory for the strategies belonging to the possible L sums.
-	second->strategy = (int*) calloc(second->iRows_reduced - 1, sizeof(int));
+	if(Ln_strategy == NULL) {perror("Memory allocation failed for Ln_strategy in function calc_Lnorm!");}
+    second->strategy = (int*) calloc(second->iRows_reduced - 1, sizeof(int));
+    if(second->strategy == NULL) {perror("Memory allocation failed for second->strategy in function calc_Lnorm!");}
 
 	if(second->n == 1 && second->marginal == 0){ // If the order of the L norm is 1 and we do not consider marginals then this part of the code will be executed.
 

@@ -280,14 +280,22 @@ void calc_Parameters(item* first, item_calc* second, int* num_of_blocks, int* nu
 
 void calc_Lnorm(item_calc* second, int* num_of_blocks, int* num_of_threads_per_block){
 	int i, iMax, *Ln_strategy, *d_Ln_strategy; //iMax: the index of the strategy vector found to be optimal; mtx_as_vec: the input matrix is converted to a vector in the host; d_mtx_as_vec: the converted matrix in the device; maxRows: them maximal number of rows (in the case of L1, the maximal number of rows or columns) of the matrix the program can deal with (this number is determined by the order of the L norm that should be calculated); Ln_vector and d_Ln_vector are the two vectors containing the possible L norms belonging to a given thread in the host and device, respectively; Ln_strategy and d_Ln_strategy are the two vector containing all of the possible strategy vectors belonging to different threads; num_ofBlock is the number of blocks the program uses; num_ofThread is the number of threads in a block
+	cudaError_t err1, err2, err3, err4, err5, err6, err7, err8, err9, err10, err11, err12, err13, err14, err15;
 	int_type *d_mtx_as_vec, *Ln_vector, *d_Ln_vector;
 	Ln_vector = (int_type*)calloc(second->copyNum, sizeof(int_type)); // The code allocates memory in the host for the possible L norms.
+	if(Ln_vector == NULL) {perror("Memory allocation failed for Ln_vector in function calc_Lnorm!\n"); }
 	Ln_strategy = (int*) malloc(second->copyNum * (second->iRows_reduced - 1) * sizeof(int)); // The code allocates memory for the strategies belonging to the possible L norms in the host.
+	if(Ln_strategy == NULL) {perror("Memory allocation failed for Ln_strategy in function calc_Lnorm!\n"); }
 	second->strategy = (int*) calloc(second->iRows_reduced - 1, sizeof(int));
-	cudaMalloc((void**)&d_mtx_as_vec, second->iRows_reduced * second->iCols_reduced * sizeof(int_type)); // Allocating memory for the matrix in the device.
-	cudaMalloc((void**)&d_Ln_vector, second->copyNum * sizeof(int_type)); // The code allocates memory in the device for the possible L norms.
-	cudaMalloc((void**)&d_Ln_strategy, second->copyNum * (second->iRows_reduced - 1) * sizeof(int)); // The code allocates memory for the strategies belonging to the possible L norms in the device.
-	cudaMemcpy(d_mtx_as_vec, second->mtx_as_vec, second->iRows_reduced * second->iCols_reduced * sizeof(int_type), cudaMemcpyHostToDevice); // The matrix is copied from RAM to GPU memory.
+	if(second->strategy == NULL) {perror("Memory allocation failed for second->strategy in function calc_Lnorm!\n"); }
+	err1 = cudaMalloc((void**)&d_mtx_as_vec, second->iRows_reduced * second->iCols_reduced * sizeof(int_type)); // Allocating memory for the matrix in the device.
+	if(err1 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_mtx_as_vec in function calc_Lnorm!\n");}
+	err2 = cudaMalloc((void**)&d_Ln_vector, second->copyNum * sizeof(int_type)); // The code allocates memory in the device for the possible L norms.
+	if(err2 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_Ln_vector in function calc_Lnorm!\n");}
+	err3 = cudaMalloc((void**)&d_Ln_strategy, second->copyNum * (second->iRows_reduced - 1) * sizeof(int)); // The code allocates memory for the strategies belonging to the possible L norms in the device.
+	if(err3 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_Ln_strategy in function calc_Lnorm!\n");}
+	err6 = cudaMemcpy(d_mtx_as_vec, second->mtx_as_vec, second->iRows_reduced * second->iCols_reduced * sizeof(int_type), cudaMemcpyHostToDevice); // The matrix is copied from RAM to GPU memory.
+	if(err6 != cudaSuccess) {perror("Copying second->mtx_as_vec to device memory failed in function calc_Lnorm!\n");}
 	if(second->n == 1 && second->marginal == 0){ // If the order of the L norm is 1 then this part of the code will be executed.
 		L1<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced); // The calculation of the L1 norm with GPU.
 	}
@@ -300,29 +308,40 @@ void calc_Lnorm(item_calc* second, int* num_of_blocks, int* num_of_threads_per_b
 	else if(second->n == 3){ // If the order of the L norm is 3 then this part of the code will be executed.
 		unsigned long long int *iNumPower, *d_iNumPower;// iNumPower is copied to the device memory to speed up the calculation of the d-ary Gray code
 		iNumPower = calc_iNumPower(second);
-		cudaMalloc((void**)&d_iNumPower, (second->maxRows-1) * sizeof(unsigned long long int));
-		cudaMemcpy(d_iNumPower, iNumPower, (second->maxRows-1) * sizeof(unsigned long long int), cudaMemcpyHostToDevice);
+		err4 = cudaMalloc((void**)&d_iNumPower, (second->maxRows-1) * sizeof(unsigned long long int));
+		if(err4 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_iNumPower in function calc_Lnorm!\n");}
+		err7 = cudaMemcpy(d_iNumPower, iNumPower, (second->maxRows-1) * sizeof(unsigned long long int), cudaMemcpyHostToDevice);
+		if(err7 != cudaSuccess) {perror("Copying iNumPower to device memory failed in function calc_Lnorm!\n");}
 		L3<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced, d_iNumPower);
 		free(iNumPower);
-		cudaFree(d_iNumPower);
+		err9 = cudaFree(d_iNumPower);
+		if(err9 != cudaSuccess) {perror("cudaFree failed for d_iNumPower in function calc_Lnorm!\n");}
 	}
 	else{ // If the order of the L norm is greater than 3, then this part of the code will be executed.
 		unsigned long long int *iNumPower, *d_iNumPower;// iNumPower is copied to the device memory to speed up the calculation of the d-ary Gray code
 		int *iPattern, *d_iPattern; // iPattern describes the d-ary Gray code.
 		iPattern = calc_Pattern(&(second->n));
 		iNumPower = calc_iNumPower(second);
-		cudaMalloc((void**)&d_iNumPower, (second->maxRows-1) * sizeof(unsigned long long int));
-		cudaMalloc((void**)&d_iPattern, 2 * second->n * sizeof(int));
-		cudaMemcpy(d_iNumPower, iNumPower, (second->maxRows-1) * sizeof(unsigned long long int), cudaMemcpyHostToDevice);
-		cudaMemcpy(d_iPattern, iPattern, 2 * second->n * sizeof(int), cudaMemcpyHostToDevice);
+		err4 = cudaMalloc((void**)&d_iNumPower, (second->maxRows-1) * sizeof(unsigned long long int));
+		if(err4 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_iNumPower in function calc_Lnorm!\n");}
+		err5 = cudaMalloc((void**)&d_iPattern, 2 * second->n * sizeof(int));
+		if(err5 != cudaSuccess) {perror("Memory (GPU) allocation failed for d_iPattern in function calc_Lnorm!\n");}
+		err7 = cudaMemcpy(d_iNumPower, iNumPower, (second->maxRows-1) * sizeof(unsigned long long int), cudaMemcpyHostToDevice);
+		if(err7 != cudaSuccess) {perror("Copying iNumPower to device memory failed in function calc_Lnorm!\n");}
+		err8 = cudaMemcpy(d_iPattern, iPattern, 2 * second->n * sizeof(int), cudaMemcpyHostToDevice);
+		if(err8 != cudaSuccess) {perror("Copying iPattern to device memory failed in function calc_Lnorm!\n");}
 		Ln<<<*num_of_blocks, *num_of_threads_per_block>>>(d_mtx_as_vec, d_iPattern, second->steps, second->steps_remainder, d_Ln_vector, d_Ln_strategy, second->iRows_reduced, second->iCols_reduced, second->n, d_iNumPower);
 		free(iNumPower);
 		free(iPattern);
-		cudaFree(d_iNumPower);
-		cudaFree(d_iPattern);
+		err9 = cudaFree(d_iNumPower);
+		if(err9 != cudaSuccess) {perror("cudaFree failed for d_iNumPower in function calc_Lnorm!\n");}
+		err10 = cudaFree(d_iPattern);
+		if(err10 != cudaSuccess) {perror("cudaFree failed for d_iPattern in function calc_Lnorm!\n");}
 	}
-	cudaMemcpy(Ln_vector, d_Ln_vector, second->copyNum * sizeof(int_type), cudaMemcpyDeviceToHost); // Copy the possible L norm values from device to host.
-	cudaMemcpy(Ln_strategy, d_Ln_strategy, second->copyNum * (second->iRows_reduced - 1) * sizeof(int), cudaMemcpyDeviceToHost); // Copy the possible strategies belonging to possible L norm values from device to host.
+	err11 = cudaMemcpy(Ln_vector, d_Ln_vector, second->copyNum * sizeof(int_type), cudaMemcpyDeviceToHost); // Copy the possible L norm values from device to host.
+	if(err11 != cudaSuccess) {perror("Copying Ln_vector to host memory failed in function calc_Lnorm!\n");}
+	err12 = cudaMemcpy(Ln_strategy, d_Ln_strategy, second->copyNum * (second->iRows_reduced - 1) * sizeof(int), cudaMemcpyDeviceToHost); // Copy the possible strategies belonging to possible L norm values from device to host.
+	if(err12 != cudaSuccess) {perror("Copying Ln_strategy to host memory failed in function calc_Lnorm!\n");}
 	second->Lnorm = Ln_vector[0];
 	iMax = 0; // Determining the maximal element of Ln_vector, which is the L norm, and the index of the corresponding strategy vector as well.
 	for(i = 1; i < second->copyNum; i++){ if(second->Lnorm < Ln_vector[i]) {second->Lnorm = Ln_vector[i]; iMax = i;}}
@@ -331,9 +350,12 @@ void calc_Lnorm(item_calc* second, int* num_of_blocks, int* num_of_threads_per_b
 	free(Ln_vector); // Deallocates the vectors in the host memory.
 	free(Ln_strategy);
 	
-	cudaFree(d_Ln_vector); // Deallocates the vectors in the device memory.
-	cudaFree(d_Ln_strategy);
-	cudaFree(d_mtx_as_vec);
+	err13 = cudaFree(d_Ln_vector); // Deallocates the vectors in the device memory.
+	if(err13 != cudaSuccess) {perror("cudaFree failed for d_Ln_vector in function calc_Lnorm!\n");}
+	err14 = cudaFree(d_Ln_strategy);
+	if(err14 != cudaSuccess) {perror("cudaFree failed for d_Ln_strategy in function calc_Lnorm!\n");}
+	err15 = cudaFree(d_mtx_as_vec);
+	if(err15 != cudaSuccess) {perror("cudaFree failed for d_mtx_as_vec in function calc_Lnorm!\n");}
 }
 
 void arguments_CUDA(item* first, int* num_of_blocks, int* num_of_threads_per_block, int* argc, char** argv, cudaDeviceProp* devProp){

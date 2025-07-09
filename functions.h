@@ -60,7 +60,7 @@ void matrix_read(item* first){
                 		i = 0;
                 		row = (int_type*) realloc(row, j * sizeof(int_type));
  	        		if(row != NULL) {row[j-1] = value; }
-                		else {perror("Memory allocation failed for row!\n");}
+                		else {perror("Memory allocation failed for row in function matrix_read!\n");}
 			}
 			if( ((g == '\n') || (g == EOF)) && (j > 0)){
                 		first->iCols = j;
@@ -68,7 +68,7 @@ void matrix_read(item* first){
                 		k++;
                 		first->matrix = (int_type**) realloc(first->matrix, k * sizeof(int_type*));
                 		if(first->matrix != NULL) {first->matrix[k-1] = row; row = NULL;}
-                		else {perror("Memory allocation failed for matrix!\n");}
+                		else {perror("Memory allocation failed for matrix in function matrix_read!\n");}
         		}
 		}
 	}while(g != EOF);
@@ -303,6 +303,7 @@ void convert_mtx_to_vec(item* first, item_calc* second){
 		second->iRows_reduced = iShorter;
 		first->original = first->original_c;
 		first->original_length = first->iCols;
+		printf("Matrix was transposed.\n");
 	}
 	else{
 		for(i = 0; i < second->iRows_reduced; i++){
