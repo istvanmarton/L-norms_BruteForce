@@ -119,6 +119,7 @@ Output is shared between the standard output stream (where the actual $L$ norm v
 
 The program prints here
  + the number of rows and columns of the input matrix as 'rows: r, cols: c', where 'r' and 'c' stand for the number of rows and the number of columns of the input matrix, respectively,
+ + a warning if the matrix was transposed,
  + the number of blocks and the number of threads for the CUDA version, the number of threads for the OpenMP version, and number of processes for the MPI version,
  + the maximal length of the strategy vector the computer can deal with,
  + a warning in case the preprocessed matrix has fewer or equal number of rows as the order of the L norm (e.g., 'Preprocessed matrix has fewer or equal number of rows (2) as the order of the $L$ norm (4).') and
