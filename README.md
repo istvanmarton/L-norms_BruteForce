@@ -65,7 +65,7 @@ It is important to note that the optional characters are not mandatory, but when
 
 The OpenMP code can be compiled, e.g., with the following command:
 
-	gcc L_OpenMP.c -fopenmp -o L_OpenMP -lm
+	gcc -O3 L_OpenMP.c -fopenmp -o L_OpenMP -lm
 
 Please note that we have tested GCC only. For GCC, the default is no optimization; to specify the optimization level, please use the -O option. After compilation, the program can be invoked as
 
@@ -77,7 +77,7 @@ The argument 'number_of_threads' specifies the number of threads. For the rest o
 
 In order to compile and execute the MPI version, an MPI library should be installed. This code was tested with Open MPI. The MPI version can be compiled, e.g., with the following command:
 
-	mpicc -o L_MPI L_MPI.c -lm
+	mpicc -O3 -o L_MPI L_MPI.c -lm
 
 Regarding the optimization level, please refer to the documentation of the compiler to be used. After compilation, the program can be invoked as
 
